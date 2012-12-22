@@ -1,0 +1,21 @@
+﻿<Properties MonoDevelop.MonoMac.LastXamMacNagTime="2012/12/20 15:01:39">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="nwChat" expanded="True">
+            <Node name="ChatController.cs" selected="True" />
+            <Node name="ClientWindow.cs" expanded="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
+    <Watch file="nwChat/ChatController.cs" line="411" offsetX="811" offsetY="4045" expression="members" liveUpdate="False" />
+  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+</Properties>
