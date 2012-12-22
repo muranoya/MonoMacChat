@@ -1,0 +1,4 @@
+MonoMacChat
+===========
+
+Simple chat
