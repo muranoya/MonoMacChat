@@ -51,7 +51,7 @@ namespace nwChat
             Test,
         }
         
-        private static Encoding enc = Encoding.UTF8;
+        private static readonly Encoding enc = Encoding.UTF8;
         private static readonly string CantUseServerFunc = "Can't use this function in client mode.";
         private static readonly string CantUseClientFunc = "Can't use this function in server mode.";
 
@@ -98,10 +98,7 @@ namespace nwChat
         public delegate void ConnectionCloseHandler();
         public event ConnectionCloseHandler ConnectionClose;
 
-        public IEnumerable<People> GetPeopleList()
-        {
-            return members.Select(m=>new People(m.Name, m.ID));
-        }
+        public IEnumerable<People> GetPeopleList() { return members.Select(m=>new People(m.Name, m.ID)); }
         private int GetNextID()
         {
             lock (syncobj)
@@ -212,7 +209,8 @@ namespace nwChat
             try
             {
                 ns.Write(sendbytes, 0, sendbytes.Length);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
@@ -243,7 +241,7 @@ namespace nwChat
                     int recid = BitConverter.ToInt32(buf, 5);
 
                     if (datasize == 0)
-                        ActionRecvData(prt, recid, new byte[]{});
+                        ActionRecvData(prt, recid, "");
                     else
                         using (MemoryStream ms = new MemoryStream())
                         {
@@ -258,7 +256,7 @@ namespace nwChat
                                 ms.Write(buf, 0, recsize);
                             }
                             
-                            ActionRecvData(prt, recid, ms.ToArray());
+                            ActionRecvData(prt, recid, enc.GetString(ms.ToArray()));
                         }
                 }
             }
@@ -278,20 +276,26 @@ namespace nwChat
                 }
             }
         }
-        
-        private void ActionRecvData(Protocol proc, int senderID, byte[] bytes)
+
+        private string[] SplitByReturn(string str, int count)
         {
-            string str;
+            if (count <= 0)
+                return str.Replace("\r\n", "\n").Replace("\r", "\n").Split(new char[]{'\n'});
+            else
+                return str.Replace("\r\n", "\n").Replace("\r", "\n").Split(new char[]{'\n'}, count);
+        }
+
+        private void ActionRecvData(Protocol proc, int senderID, string str)
+        {
             string[] spl;
-            int recid;
             switch (proc)
             {
                 case Protocol.ChatMSG:
-                    if (bytes != null && bytes.Length > 0)
+                    if (str != null && str.Length > 0)
                     {
-                        str = enc.GetString(bytes);
                         if (isServer)
                             ForwardingMSG(str, senderID);
+
                         try
                         {
                             ReceiveChatMessage(GetMember(senderID).Name, str, senderID);
@@ -304,9 +308,9 @@ namespace nwChat
                     }
                     break;
                 case Protocol.AssignID:
-                    if (bytes != null && bytes.Length > 0 && !isServer)
+                    if (str != null && str.Length > 0 && !isServer)
                     {
-                        myid = recid = Convert.ToInt32(enc.GetString(bytes));
+                        myid = Convert.ToInt32(str);
                         serverID = senderID;
                         SendIntroduce(MyName, MyID, clientNs);
                         try
@@ -321,11 +325,10 @@ namespace nwChat
                     }
                     break;
                 case Protocol.DirectMSG:
-                    if (bytes != null && bytes.Length > 0)
+                    if (str != null && str.Length > 0)
                     {
-                        str = enc.GetString(bytes);
-                        spl = str.Split(new char[]{'\n'}, 2);
-                        recid = Convert.ToInt32(spl[0]);
+                        spl = SplitByReturn(str, 2);
+                        int recid = Convert.ToInt32(spl[0]);
                         if (recid == MyID)
                         {
                             try
@@ -338,14 +341,13 @@ namespace nwChat
                                 Console.WriteLine(ex.StackTrace);
                             }
                         }
-                        else if (isServer && recid != MyID)
+                        else if (isServer)
                             SendDirectMSG(spl[1], recid, senderID);
                     }
                     break;
                 case Protocol.Introduce:
-                    if (bytes != null && bytes.Length > 0)
+                    if (str != null && str.Length > 0)
                     {
-                        str = enc.GetString(bytes);
                         if (isServer)
                         {
                             ForwardingIntroduce(str, senderID);
@@ -368,10 +370,9 @@ namespace nwChat
                     }
                     break;
                 case Protocol.MemberList:
-                    if (bytes != null && bytes.Length > 0 && !isServer)
+                    if (str != null && str.Length > 0 && !isServer)
                     {
-                        str = enc.GetString(bytes);
-                        spl = str.Split(new char[]{'\n'});
+                        spl = SplitByReturn(str, -1);
 
                         members.Clear();
                         int len = spl.Length / 2;
@@ -488,24 +489,28 @@ namespace nwChat
                     ns.Close();
                     ns.Dispose();
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
 
             if (IsServer)
-            {
-                for (int i = 0; i < members.Count;)
+                lock (syncobj)
                 {
-                    if (members [i].Connection == ns || members [i].Connection == null || !members [i].Connection.CanRead || !members [i].Connection.CanWrite)
+                    for (int i = 0; i < members.Count;)
                     {
-                        SendLeave(members [i].ID);
-                        members.RemoveAt(i);
-                    } else
-                        i++;
+                        if (members [i].Connection == ns || members [i].Connection == null ||
+                            !members [i].Connection.CanRead || !members [i].Connection.CanWrite)
+                        {
+                            SendLeave(members [i].ID);
+                            members.RemoveAt(i);
+                        }
+                        else
+                            i++;
+                    }
                 }
-            }
         }
 
         /// <summary>

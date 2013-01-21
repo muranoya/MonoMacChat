@@ -1,12 +1,14 @@
-﻿<Properties MonoDevelop.MonoMac.LastXamMacNagTime="2012/12/20 15:01:39">
+﻿<Properties MonoDevelop.MonoMac.LastXamMacNagTime="2013/01/21 20:12:28">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="nwChat/ChatController.cs">
+    <Files>
+      <File FileName="nwChat/ChatController.cs" Line="374" Column="22" />
+    </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="nwChat" expanded="True">
             <Node name="ChatController.cs" selected="True" />
-            <Node name="ClientWindow.cs" expanded="True" />
           </Node>
         </State>
       </Pad>
